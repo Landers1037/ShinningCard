@@ -34,6 +34,7 @@ const MouseController: React.FC = () => {
     if (!isDragging) return
     
     const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
+    const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY
     const deltaX = clientX - lastMousePos.current.x
     const targetY = Math.max(-60, Math.min(60, startRotationY.current - deltaX * 0.4))
     nextRotation.current = { y: targetY }

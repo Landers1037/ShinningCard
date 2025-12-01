@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import CSSFlashcard from './CSSFlashcard'
 import ControlPanel from './ControlPanel'
-import leftImg from '@/assets/1.jpg'
-import rightImg from '@/assets/3.jpg'
+import leftImg from '@/assets/left.png'
+import rightImg from '@/assets/right.png'
+import { getStoredImages, saveImages, clearImages, fileToDataURL } from '@/utils/db'
+import { Settings, Info, RotateCcw, Trash2 } from 'lucide-react'
+import useFlashcardStore from '@/stores/flashcardStore'
+import AutoRotateController from './AutoRotateController'
+import FilePicker from './FilePicker'
 
 const DEFAULT_IMAGES = {
   left: leftImg,
@@ -22,9 +27,13 @@ const FlashcardContainer: React.FC<FlashcardContainerProps> = ({
   leftImageUrl = DEFAULT_IMAGES.left,
   rightImageUrl = DEFAULT_IMAGES.right
 }) => {
+  const [leftUrl, setLeftUrl] = useState(leftImageUrl)
+  const [rightUrl, setRightUrl] = useState(rightImageUrl)
   const [isMobile, setIsMobile] = useState(false)
   const [showInstructions, setShowInstructions] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const { showStatusPanel, setShowStatusPanel, autoRotate, setAutoRotate } = useFlashcardStore()
 
   // 检测设备类型
   useEffect(() => {
@@ -40,10 +49,15 @@ const FlashcardContainer: React.FC<FlashcardContainerProps> = ({
       checkDevice()
       window.addEventListener('resize', checkDevice)
       
-      // 模拟加载时间，确保组件正确初始化
-      setTimeout(() => {
-        setIsLoading(false)
-      }, 1000)
+      const initImages = async () => {
+        const stored = await getStoredImages()
+        if (stored.left || stored.right) {
+          setLeftUrl(stored.left || leftImageUrl)
+          setRightUrl(stored.right || rightImageUrl)
+        }
+      }
+      await initImages()
+      setTimeout(() => { setIsLoading(false) }, 500)
       
       return () => {
         window.removeEventListener('resize', checkDevice)
@@ -87,10 +101,63 @@ const FlashcardContainer: React.FC<FlashcardContainerProps> = ({
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-700/20 via-transparent to-transparent"></div>
       
       {/* CSS 3D闪卡 */}
-      <CSSFlashcard leftImageUrl={leftImageUrl} rightImageUrl={rightImageUrl} />
+      <CSSFlashcard leftImageUrl={leftUrl} rightImageUrl={rightUrl} />
+      <AutoRotateController />
       
+      {/* 顶部按钮 */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+        <button
+          onClick={() => setShowStatusPanel(!showStatusPanel)}
+          className="px-3 py-2 rounded-md bg-black/50 hover:bg-black/60 text-white text-xs flex items-center gap-1"
+        >
+          <Info size={14} />
+          <span>状态</span>
+        </button>
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="px-3 py-2 rounded-md bg-black/50 hover:bg-black/60 text-white text-xs flex items-center gap-1"
+        >
+          <Settings size={14} />
+          <span>设置</span>
+        </button>
+      </div>
+
       {/* 控制面板 */}
-      <ControlPanel />
+      {showStatusPanel && <ControlPanel />}
+
+      {/* 设置弹框 */}
+      {settingsOpen && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSettingsOpen(false)} />
+          <div className="relative bg-gray-800 text-white rounded-lg p-4 w-80 shadow-xl">
+            <div className="text-sm font-medium mb-3">设置</div>
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs mb-1">左侧图片</div>
+                <FilePicker label="选择左侧图片" accept="image/*" onFileSelected={(url) => setLeftUrl(url)} />
+              </div>
+              <div>
+                <div className="text-xs mb-1">右侧图片</div>
+                <FilePicker label="选择右侧图片" accept="image/*" onFileSelected={(url) => setRightUrl(url)} />
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <input id="autoRotate" type="checkbox" checked={autoRotate} onChange={(e) => setAutoRotate(e.target.checked)} />
+                <label htmlFor="autoRotate">自动旋转</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => { await saveImages(leftUrl, rightUrl); setSettingsOpen(false) }}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-xs"
+                >保存</button>
+                <button
+                  onClick={async () => { await clearImages(); setLeftUrl(DEFAULT_IMAGES.left); setRightUrl(DEFAULT_IMAGES.right); setSettingsOpen(false) }}
+                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-xs flex items-center gap-1"
+                ><Trash2 size={12} />清除缓存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* 操作提示 */}
       {showInstructions && (

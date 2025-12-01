@@ -151,7 +151,7 @@ const FallbackFlashcard: React.FC<FallbackFlashcardProps> = ({ leftImageUrl, rig
       </div>
       
       {/* 控制面板 */}
-      <div className="absolute top-4 right-4 bg-black bg-opacity-50 backdrop-blur-sm rounded-lg p-3 text-white text-xs max-w-[200px]">
+      <div className="absolute top-16 right-4 bg-black bg-opacity-50 backdrop-blur-sm rounded-lg p-3 text-white text-xs max-w-[200px]">
         <div className="mb-2">
           <div className="text-xs text-gray-300 mb-1">旋转角度</div>
           <div className="grid grid-cols-3 gap-1 text-xs">

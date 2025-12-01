@@ -12,7 +12,7 @@ const ControlPanel: React.FC = () => {
   const blendParams = calculateImageBlend(rotation.y)
   
   return (
-    <div className="absolute top-4 right-4 bg-black bg-opacity-50 backdrop-blur-sm rounded-lg p-3 md:p-4 text-white text-xs md:text-sm max-w-[200px] md:max-w-none">
+    <div className="absolute top-16 right-4 bg-black bg-opacity-50 backdrop-blur-sm rounded-lg p-3 md:p-4 text-white text-xs md:text-sm max-w-[200px] md:max-w-none">
       {/* 角度信息 */}
       <div className="mb-2 md:mb-3">
         <div className="flex items-center gap-2 mb-1">

@@ -9,33 +9,31 @@ export function calculateImageBlend(rotationY: number): {
   blendFactor: number
   isBlending: boolean
 } {
-  // 将角度标准化到 -90 到 90 度范围
-  const normalizedRotation = Math.max(-90, Math.min(90, rotationY))
-  
-  // 定义融合区域（中间角度范围）
-  const blendStart = -15
-  const blendEnd = 15
-  
-  // 计算融合因子
-  let blendFactor = 0
-  let isBlending = false
-  
-  if (normalizedRotation <= blendStart) {
-    // 左侧角度，只显示左图
-    blendFactor = 0
-  } else if (normalizedRotation >= blendEnd) {
-    // 右侧角度，只显示右图
-    blendFactor = 1
+  const normalizedRotation = Math.max(-60, Math.min(60, rotationY))
+  const angleAbs = Math.abs(normalizedRotation)
+  const maxBlendAngle = 55
+  let leftOpacity = 0
+  let rightOpacity = 0
+  let isBlending = angleAbs < maxBlendAngle
+  if (angleAbs >= maxBlendAngle) {
+    if (normalizedRotation >= 0) {
+      rightOpacity = 1
+      leftOpacity = 0
+    } else {
+      leftOpacity = 1
+      rightOpacity = 0
+    }
   } else {
-    // 融合区域，根据角度计算融合因子
-    isBlending = true
-    blendFactor = (normalizedRotation - blendStart) / (blendEnd - blendStart)
+    const sideOpacity = 0.5 + (angleAbs / (2 * maxBlendAngle))
+    if (normalizedRotation >= 0) {
+      rightOpacity = sideOpacity
+      leftOpacity = 1 - sideOpacity
+    } else {
+      leftOpacity = sideOpacity
+      rightOpacity = 1 - sideOpacity
+    }
   }
-  
-  // 计算图片透明度
-  const leftOpacity = isBlending ? 1 - blendFactor : (normalizedRotation < 0 ? 1 : 0)
-  const rightOpacity = isBlending ? blendFactor : (normalizedRotation > 0 ? 1 : 0)
-  
+  const blendFactor = normalizedRotation >= 0 ? rightOpacity : leftOpacity
   return {
     leftOpacity: Math.max(0, Math.min(1, leftOpacity)),
     rightOpacity: Math.max(0, Math.min(1, rightOpacity)),

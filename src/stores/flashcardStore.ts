@@ -10,6 +10,8 @@ export interface FlashcardState {
   blendFactor: number
   isGyroscopeEnabled: boolean
   isDragging: boolean
+  autoRotate: boolean
+  showStatusPanel: boolean
 }
 
 export interface ImageSet {
@@ -23,6 +25,8 @@ interface FlashcardStore extends FlashcardState {
   setBlendFactor: (factor: number) => void
   setGyroscopeEnabled: (enabled: boolean) => void
   setIsDragging: (dragging: boolean) => void
+  setAutoRotate: (enabled: boolean) => void
+  setShowStatusPanel: (visible: boolean) => void
   resetRotation: () => void
 }
 
@@ -32,6 +36,8 @@ const useFlashcardStore = create<FlashcardStore>((set) => ({
   blendFactor: 0.5,
   isGyroscopeEnabled: false,
   isDragging: false,
+  autoRotate: false,
+  showStatusPanel: false,
   
   setRotation: (rotation) => set((state) => ({
     rotation: { ...state.rotation, ...rotation }
@@ -44,6 +50,10 @@ const useFlashcardStore = create<FlashcardStore>((set) => ({
   setGyroscopeEnabled: (enabled) => set({ isGyroscopeEnabled: enabled }),
   
   setIsDragging: (dragging) => set({ isDragging: dragging }),
+
+  setAutoRotate: (enabled) => set({ autoRotate: enabled }),
+
+  setShowStatusPanel: (visible) => set({ showStatusPanel: visible }),
   
   resetRotation: () => set({ rotation: { x: 0, y: 0, z: 0 } })
 }))
