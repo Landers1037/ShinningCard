@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import useFlashcardStore from '@/stores/flashcardStore'
-import { calculateImageBlend } from '@/utils/imageBlend'
+import { calculateBlendByAxes } from '@/utils/imageBlend'
 import MouseController from './MouseController'
 import GyroscopeController from './GyroscopeController'
 
@@ -16,6 +16,9 @@ interface CSSFlashcardProps {
 const CSSFlashcard: React.FC<CSSFlashcardProps> = ({ leftImageUrl, rightImageUrl }) => {
   const { rotation, isDragging, setIsDragging } = useFlashcardStore()
   const cardRef = useRef<HTMLDivElement>(null)
+  const targetRef = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState({ w: 0, h: 0 })
+  const thickness = 12
   const [isClient, setIsClient] = useState(false)
   
   // 确保在客户端渲染
@@ -24,7 +27,19 @@ const CSSFlashcard: React.FC<CSSFlashcardProps> = ({ leftImageUrl, rightImageUrl
   }, [])
   
   // 计算融合参数
-  const blendParams = calculateImageBlend(rotation.y)
+  const blendParams = calculateBlendByAxes(rotation)
+  const leftOpacityFinal = blendParams.leftOpacity
+  const rightOpacityFinal = blendParams.rightOpacity
+
+  useEffect(() => {
+    const el = targetRef.current
+    const updateSize = () => {
+      if (el) setSize({ w: el.offsetWidth, h: el.offsetHeight })
+    }
+    updateSize()
+    window.addEventListener('resize', updateSize)
+    return () => window.removeEventListener('resize', updateSize)
+  }, [])
   
   if (!isClient) {
     return (
@@ -56,31 +71,119 @@ const CSSFlashcard: React.FC<CSSFlashcardProps> = ({ leftImageUrl, rightImageUrl
             transformStyle: 'preserve-3d',
             willChange: 'transform'
           }}
+          ref={targetRef}
         >
-          {/* 左侧图片 */}
+          {/* 前面：左右图层叠加 */}
           <div
             className="absolute inset-0 rounded-lg shadow-2xl"
             style={{
               backgroundImage: `url(${leftImageUrl})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: blendParams.leftOpacity,
-              backfaceVisibility: 'hidden'
+              opacity: leftOpacityFinal,
+              backfaceVisibility: 'hidden',
+              transform: `translateZ(${thickness / 2}px)`
             }}
           />
-          
-          {/* 右侧图片 */}
           <div
             className="absolute inset-0 rounded-lg shadow-2xl"
             style={{
               backgroundImage: `url(${rightImageUrl})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: blendParams.rightOpacity,
-              backfaceVisibility: 'hidden'
+              opacity: rightOpacityFinal,
+              backfaceVisibility: 'hidden',
+              transform: `translateZ(${thickness / 2}px)`
             }}
           />
-          
+
+          {/* 背面：左右图层叠加 */}
+          <div
+            className="absolute inset-0 rounded-lg shadow-2xl"
+            style={{
+              backgroundImage: `url(${leftImageUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: leftOpacityFinal,
+              backfaceVisibility: 'hidden',
+              transform: `rotateY(180deg) translateZ(${thickness / 2}px)`
+            }}
+          />
+          <div
+            className="absolute inset-0 rounded-lg shadow-2xl"
+            style={{
+              backgroundImage: `url(${rightImageUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: rightOpacityFinal,
+              backfaceVisibility: 'hidden',
+              transform: `rotateY(180deg) translateZ(${thickness / 2}px)`
+            }}
+          />
+
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2"
+            style={{
+              width: `${thickness}px`,
+              height: '100%',
+              background: 'linear-gradient(180deg, #f5e3b1, #d4af37, #b8860b)',
+              transform: `rotateY(90deg) translateZ(${size.w / 2}px)`,
+              backfaceVisibility: 'hidden',
+              borderRadius: '8px'
+            }}
+          />
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2"
+            style={{
+              width: `${thickness}px`,
+              height: '100%',
+              background: 'linear-gradient(180deg, #f5e3b1, #d4af37, #b8860b)',
+              transform: `rotateY(90deg) translateZ(-${size.w / 2}px)`,
+              backfaceVisibility: 'hidden',
+              borderRadius: '8px'
+            }}
+          />
+          <div
+            className="absolute left-0 top-1/2 -translate-y-1/2"
+            style={{
+              width: '100%',
+              height: `${thickness}px`,
+              background: 'linear-gradient(90deg, #f5e3b1, #d4af37, #b8860b)',
+              transform: `rotateX(90deg) translateZ(${size.h / 2}px)`,
+              backfaceVisibility: 'hidden',
+              borderRadius: '8px'
+            }}
+          />
+          <div
+            className="absolute left-0 top-1/2 -translate-y-1/2"
+            style={{
+              width: '100%',
+              height: `${thickness}px`,
+              background: 'linear-gradient(90deg, #f5e3b1, #d4af37, #b8860b)',
+              transform: `rotateX(90deg) translateZ(-${size.h / 2}px)`,
+              backfaceVisibility: 'hidden',
+              borderRadius: '8px'
+            }}
+          />
+
+          <div
+            className="absolute inset-0 rounded-xl pointer-events-none"
+            style={{
+              transform: `translateZ(${thickness / 2}px)`,
+              border: '12px solid',
+              borderImage: 'linear-gradient(135deg, #f5e3b1, #d4af37, #b8860b, #ffd700, #f5e3b1) 1',
+              boxShadow: '0 0 16px rgba(212,175,55,0.6), inset 0 0 10px rgba(255,215,0,0.3)'
+            }}
+          />
+          <div
+            className="absolute inset-0 rounded-xl pointer-events-none"
+            style={{
+              transform: `rotateY(180deg) translateZ(${thickness / 2}px)`,
+              border: '12px solid',
+              borderImage: 'linear-gradient(135deg, #f5e3b1, #d4af37, #b8860b, #ffd700, #f5e3b1) 1',
+              boxShadow: '0 0 16px rgba(212,175,55,0.6), inset 0 0 10px rgba(255,215,0,0.3)'
+            }}
+          />
           
         </div>
       </div>

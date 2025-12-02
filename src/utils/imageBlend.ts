@@ -9,9 +9,9 @@ export function calculateImageBlend(rotationY: number): {
   blendFactor: number
   isBlending: boolean
 } {
-  const normalizedRotation = Math.max(-60, Math.min(60, rotationY))
+  const normalizedRotation = rotationY
   const angleAbs = Math.abs(normalizedRotation)
-  const maxBlendAngle = 55
+  const maxBlendAngle = 60
   let leftOpacity = 0
   let rightOpacity = 0
   let isBlending = angleAbs < maxBlendAngle
@@ -40,6 +40,18 @@ export function calculateImageBlend(rotationY: number): {
     blendFactor,
     isBlending
   }
+}
+
+export function calculateBlendByAxes(rotation: { x: number; y: number; z: number }): {
+  leftOpacity: number
+  rightOpacity: number
+  blendFactor: number
+  isBlending: boolean
+} {
+  const angles = [rotation.x, rotation.y, rotation.z]
+  const idx = [Math.abs(rotation.x), Math.abs(rotation.y), Math.abs(rotation.z)].reduce((m, v, i, arr) => (v > arr[m] ? i : m), 0)
+  const dominant = angles[idx]
+  return calculateImageBlend(dominant)
 }
 
 /**

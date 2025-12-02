@@ -1,7 +1,7 @@
 import React from 'react'
 import { RotateCcw, MousePointer, Smartphone } from 'lucide-react'
 import useFlashcardStore from '@/stores/flashcardStore'
-import { calculateImageBlend } from '@/utils/imageBlend'
+import { calculateBlendByAxes } from '@/utils/imageBlend'
 
 /**
  * 控制面板组件
@@ -9,7 +9,8 @@ import { calculateImageBlend } from '@/utils/imageBlend'
  */
 const ControlPanel: React.FC = () => {
   const { rotation, resetRotation, isGyroscopeEnabled, isDragging } = useFlashcardStore()
-  const blendParams = calculateImageBlend(rotation.y)
+  const blendParams = calculateBlendByAxes(rotation)
+  const overThreshold = Math.abs(rotation.x) >= 60 || Math.abs(rotation.y) >= 60 || Math.abs(rotation.z) >= 60
   
   return (
     <div className="absolute top-16 right-4 bg-black bg-opacity-50 backdrop-blur-sm rounded-lg p-3 md:p-4 text-white text-xs md:text-sm max-w-[200px] md:max-w-none">
@@ -38,13 +39,13 @@ const ControlPanel: React.FC = () => {
       <div className="mb-2 md:mb-3">
         <div className="text-xs text-gray-300 mb-1">融合状态</div>
         <div className={`text-xs px-2 py-1 rounded ${
-          blendParams.isBlending 
+          !overThreshold && blendParams.isBlending 
             ? 'bg-yellow-600 bg-opacity-50 text-yellow-200' 
             : 'bg-gray-600 bg-opacity-50 text-gray-300'
         }`}>
-          {blendParams.isBlending ? '融合中' : '单图显示'}
+          {!overThreshold && blendParams.isBlending ? '融合中' : '单图显示'}
         </div>
-        {blendParams.isBlending && (
+        {!overThreshold && blendParams.isBlending && (
           <div className="text-xs text-gray-400 mt-1">
             融合度: {Math.round(blendParams.blendFactor * 100)}%
           </div>

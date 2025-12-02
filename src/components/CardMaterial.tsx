@@ -2,7 +2,7 @@ import React, { useRef, useMemo } from 'react'
 import { useFrame, useLoader } from '@react-three/fiber'
 import { TextureLoader, MeshStandardMaterial, DoubleSide } from 'three'
 import useFlashcardStore from '@/stores/flashcardStore'
-import { calculateImageBlend } from '@/utils/imageBlend'
+import { calculateBlendByAxes } from '@/utils/imageBlend'
 
 interface CardMaterialProps {
   leftImageUrl: string
@@ -23,8 +23,8 @@ const CardMaterial: React.FC<CardMaterialProps> = ({ leftImageUrl, rightImageUrl
   
   // 计算融合参数
   const blendParams = useMemo(() => {
-    return calculateImageBlend(rotation.y)
-  }, [rotation.y])
+    return calculateBlendByAxes(rotation)
+  }, [rotation.x, rotation.y, rotation.z])
   
   // 更新材质
   useFrame(() => {
